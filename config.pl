@@ -29,23 +29,28 @@ $BotAlt = "CBot-Perl-"
 $BotIdent = "CBot-Perl"
 
 ###
-# Bot realname.
+# Bot's realname.
 ##
 $BotRealname = "CBot-Perl"
 
 ### 
-# Bot server.
+# Bot's server.
 ##
 $BotServer = "irc.address.org"
 
 ###
-# Bot port.
+# Bot's port.
 ##
 $BotPort = 6667
 
 ###
-# Bot channel.
+# Bot's channel.
 ##
 $BotHome = "#CBot"
+
+###
+# Bot's Admin nick.
+##
+$BotAdmin = "Your-nick"
 
 ### End of configuration ###
