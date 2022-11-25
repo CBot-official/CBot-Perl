@@ -1,4 +1,3 @@
-
 #!/usr/bin/perl -w
 #
 
@@ -7,11 +6,11 @@ use IO::Socket;
 
 #IRC parameters
 my $ircServer = 'irc.rizon.net';
-my $homeChannel = '#cbot';
+my $homeChannel = '#astalavista';
 
 my $botnick = 'perl_Cbot';
 my $botIdent = 'perl_Cbot';
-my $botRealName = 'perl_Cbot';
+my $botRealName = 'perl_Cbot by Worm';
 
 # Creates a new client. Timeout is defined in seconds.
 my $con = IO::Socket::INET->new(
@@ -41,13 +40,36 @@ sub sendPrivNot {
     sendIRC("NOTICE $to :$msg");
 }
 
+sub getNick {
+    local $msg;
+    my $msg = shift;
+    @msgSpt = split(/!/, $msg);
+    $nick = $msgSpt[0];
+    my $nick = substr($nick, 1);
+    return $nick;
+}
+
+sub getTarget {
+    local $msg;
+    my $msg = shift;
+    @msgSpt = split(/ PRIVMSG /, $msg);
+    @msgSpt = split(/ /, $msgSpt[1]);
+    $target = $msgSpt[0];
+    return $target;
+}
+
+sub getMessage {
+    local $msg;
+    my $msg = shift;
+    my $target = shift;
+    @msgSpt = split(/ $target :/, $msg);
+    $message = $msgSpt[1];
+    return $message;
+}
+
 # Join the IRC Network
 sendIRC("USER $botIdent * * $botRealName");
 sendIRC("NICK $botnick");
-
-$nick = '';
-$target = '';
-$message = '';
 
 # IRC connection loop
 while (my $serverMsg = <$con>)
@@ -67,19 +89,29 @@ while (my $serverMsg = <$con>)
         sendIRC("JOIN $homeChannel");  
     }
 
-    # On PRIVMSG 
+#------------
+# If JOIN /
+#-------------------------------------
+# Messages come in from IRC in the format of: ":[Nick]!~[hostname]@[IPAddress] JOIN :[channel]"
+    elsif ($serverMsg =~ / JOIN :/)
+    {
+        $nick = getNick($serverMsg);
+        @msgSpt = split(/ JOIN :/, $serverMsg);
+        $target = $msgSpt[1];
+
+        if ($homeChannel = $target)
+        {sendPrivMsg($nick, "Hello $nick and welcome to $homeChannel"); }
+    }
+
+#------------
+# If PRIVMSG /
+#------------------------------------- 
+# Messages come in from IRC in the format of: ":[Nick]!~[hostname]@[IPAddress] PRIVMSG [channel] :[message]"
     elsif ($serverMsg =~ / PRIVMSG /)
     {
-        @msgSpt = split(/!/, $serverMsg);
-        $nick = $msgSpt[0];
-        my $nick = substr($nick, 1);
-
-        @msgSpt = split(/ PRIVMSG /, $serverMsg);
-        @msgSpt = split(/ /, $msgSpt[1]);
-        $target = $msgSpt[0];
-
-        @msgSpt = split(/ $target :/, $serverMsg);
-        $message = $msgSpt[1];
+        $nick = getNick($serverMsg);
+        $target = getTarget($serverMsg);     
+        $message = getMessage($target, $serverMsg);  
 
         # reply to !testMsg sent to home channel
         if ($homeChannel = $target && $serverMsg =~ / :!testMsg/)
@@ -93,7 +125,6 @@ while (my $serverMsg = <$con>)
             #send msg to senders nick
             sendPrivMsg($nick, "found testMsg");    
         }
-
     }
 
 
