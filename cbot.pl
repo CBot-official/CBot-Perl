@@ -1,8 +1,9 @@
 #!/usr/bin/perl -w
 #
 
-# Object interface to socket communications
+use Nice::Try;
 use IO::Socket;
+
 
 #IRC parameters
 my $ircServer = 'irc.rizon.net';
@@ -12,7 +13,7 @@ my $botnick = 'perl_Cbot';
 my $botIdent = 'perl_Cbot';
 my $botRealName = 'perl_Cbot by Worm';
 
-# Creates a new client. Timeout is defined in seconds.
+# Creates a new client connection. Timeout is defined in seconds.
 my $con = IO::Socket::INET->new(
   PeerAddr  => $ircServer,
   PeerPort  => '6667',
@@ -67,66 +68,74 @@ sub getMessage {
     return $message;
 }
 
-# Join the IRC Network
+# finish joining the IRC Network
 sendIRC("USER $botIdent * * $botRealName");
 sendIRC("NICK $botnick");
 
 # IRC connection loop
 while (my $serverMsg = <$con>)
 {
-    # Show server reply
-    print $serverMsg;
+    # Keep the bot runiing if there is a Msg error
+    try {
+        # Show server reply
+        print $serverMsg;
 
-    # Answer to server ping requests to keep connection alive
-    if ($serverMsg =~ m/^PING (.*?)$/gi)
-    {
-        sendIRC("PONG ".$1);
-    }
+        # Answer to server ping requests to keep connection alive
+        if ($serverMsg =~ m/^PING (.*?)$/gi)
+            {sendIRC("PONG ".$1); }
 
-    # join channel after we get the welcome msg from server
-    elsif ($serverMsg =~ / 001 $botnick :/)
-    {
-        sendIRC("JOIN $homeChannel");  
-    }
+        # join channel after we get the welcome msg from server
+        elsif ($serverMsg =~ / 001 $botnick :/)
+            {sendIRC("JOIN $homeChannel"); }
 
 #------------
 # If JOIN /
 #-------------------------------------
 # Messages come in from IRC in the format of: ":[Nick]!~[hostname]@[IPAddress] JOIN :[channel]"
-    elsif ($serverMsg =~ / JOIN :/)
-    {
-        $nick = getNick($serverMsg);
-        @msgSpt = split(/ JOIN :/, $serverMsg);
-        $target = $msgSpt[1];
+        elsif ($serverMsg =~ / JOIN :/) {
+            $nick = getNick($serverMsg);
+            @msgSpt = split(/ JOIN :/, $serverMsg);
+            $target = $msgSpt[1];
 
-        if ($homeChannel = $target)
-        {sendPrivMsg($nick, "Hello $nick and welcome to $homeChannel"); }
-    }
+            if ($homeChannel = $target)
+                {sendPrivMsg($nick, "Hello $nick and welcome to $homeChannel"); }
+            
+            # End JOIN    
+            }
 
 #------------
 # If PRIVMSG /
 #------------------------------------- 
 # Messages come in from IRC in the format of: ":[Nick]!~[hostname]@[IPAddress] PRIVMSG [channel] :[message]"
-    elsif ($serverMsg =~ / PRIVMSG /)
-    {
-        $nick = getNick($serverMsg);
-        $target = getTarget($serverMsg);     
-        $message = getMessage($target, $serverMsg);  
+        elsif ($serverMsg =~ / PRIVMSG /) {
+            $nick = getNick($serverMsg);
+            $target = getTarget($serverMsg);     
+            $message = getMessage($target, $serverMsg);  
 
-        # reply to !testMsg sent to home channel
-        if ($homeChannel = $target && $serverMsg =~ / :!testMsg/)
-        {
-            #send msg to home channel
-            sendPrivMsg($target, "found testMsg");  
-            sendPrivMsg($nick, "found testMsg"); 
-        }
-        elsif ($botnick = $target && $serverMsg =~ / :!testMsg/) 
-        {
-            #send msg to senders nick
-            sendPrivMsg($nick, "found testMsg");    
-        }
+            # When msg is sent to homeChannel
+            if ($homeChannel = $target && $serverMsg =~ / :!testMsg/) {
+                #send msg to home channel
+                sendPrivMsg($target, "found testMsg");  
+                sendPrivMsg($nick, "found testMsg"); 
+                }
+
+            # When msg is sent to bot
+            elsif ($botnick = $target) {
+                if ($serverMsg =~ / :!testMsg/)
+                    {sendPrivMsg($nick, "found testMsg"); }
+
+                elsif ($botnick = $target && $serverMsg =~ / :hello/) 
+                    {sendPrivMsg($nick, "Hello $nick, this is about all I do. Tell you welcome to the channel, reply to hello, and replay to !testMsg"); }
+                    
+                # End msg is sent to bot  
+                }
+                
+            # End PRIVMSG  
+            }
+    } 
+    catch($e) {
+     warn($e);
     }
-
 
 
 }
