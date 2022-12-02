@@ -4,14 +4,7 @@
 use Nice::Try;
 use IO::Socket;
 
-
-#IRC parameters
-my $ircServer = 'irc.rizon.net';
-my $homeChannel = '#astalavista';
-
-my $botnick = 'perl_Cbot';
-my $botIdent = 'perl_Cbot';
-my $botRealName = 'perl_Cbot by Worm';
+require "config.pl";
 
 # Creates a new client connection. Timeout is defined in seconds.
 my $con = IO::Socket::INET->new(
