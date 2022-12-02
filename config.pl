@@ -8,7 +8,7 @@
 #
 #################################################
 #
-# Perl release. v0.1
+# Perl release. v0.0.1
 #################################################
 
 ### Start of configuration ###
@@ -16,41 +16,36 @@
 ###
 # Bot's nick.
 ##
-$BotNick = "CBot-Perl"
+my $botnick  = 'CBot-Perl'
 
 ###
 # Bot's alter nick.
 ##
-$BotAlt = "CBot-Perl-"
+my $botAlt = 'CBot-Perl-'
 
 ###
 # Bot's ident.
 ##
-$BotIdent = "CBot-Perl"
+my $botIdent = 'CBot-Perl'
 
 ###
 # Bot's realname.
 ##
-$BotRealname = "CBot-Perl"
+my $botRealName  = 'CBot-Perl'
 
 ### 
 # Bot's server.
 ##
-$BotServer = "irc.address.org"
+my $ircServer = 'irc.address.org'
 
 ###
 # Bot's port.
 ##
-$BotPort = 6667
+my $ircServerPort = 6667
 
 ###
-# Bot's channel.
+# Bot's home channel.
 ##
-$BotHome = "#CBot"
-
-###
-# Bot's Admin nick.
-##
-$BotAdmin = "Your-nick"
+my $homeChannel = '#CBot'
 
 ### End of configuration ###
